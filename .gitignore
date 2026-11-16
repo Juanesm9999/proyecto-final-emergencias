@@ -24,3 +24,6 @@ emergencias-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Datos que genera el sistema al ejecutarse (no se suben)
+/data/
