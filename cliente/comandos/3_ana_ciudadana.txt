@@ -1,0 +1,6 @@
+# Una ciudadana registra a Andrés y un familiar deja un mensaje
+pause 2500
+connect ana 1111 ciudadano zona_norte "Ana Gómez"
+report_person 1094 "Andrés Gómez" zona_norte localizada 34
+send_family_message 1094 "Andrés, estamos bien. Te buscamos en el albergue norte"
+list_family_messages 1094

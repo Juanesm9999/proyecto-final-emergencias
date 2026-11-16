@@ -1,0 +1,12 @@
+# Laura se conecta como coordinadora de la zona centro y prepara la operación
+connect laura 1234 coordinador centro "Laura Pérez"
+register_zone centro "Zona Centro" critico 1200
+register_sector centro_s3 "Sector 3" alto 400 centro
+register_point p_s3_1 "Punto de atención sector 3" alto 150 centro_s3
+register_zone zona_norte "Zona Norte" medio 300
+register_resource R001 agua 50 litros centro_acopio_1 centro
+register_shelter A01 "Albergue Norte" zona_norte 150
+register_need agua 30 critica centro "Punto de atención sector 3" p_s3_1
+pause 1500
+# Al mismo tiempo que Pedro, intenta asignar 30 litros
+assign_resource N001 agua 30

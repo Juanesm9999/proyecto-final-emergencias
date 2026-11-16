@@ -1,0 +1,8 @@
+# La coordinadora consulta el resultado final
+connect laura 1234
+confirm_match MAS001 MAS002
+list_needs zona=centro
+critical_resources
+zone_status centro
+check_shelter A01
+summary

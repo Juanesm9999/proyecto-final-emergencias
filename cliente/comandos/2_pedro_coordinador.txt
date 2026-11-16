@@ -1,0 +1,6 @@
+# Pedro (otro coordinador) registra otra necesidad sobre el mismo recurso
+pause 1000
+connect pedro 5678 coordinador centro "Pedro Ríos"
+register_need agua 25 alta centro "Familias del sector 2"
+pause 300
+assign_resource N002 agua 25

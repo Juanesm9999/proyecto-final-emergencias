@@ -1,0 +1,7 @@
+# Un voluntario registra el ingreso al albergue y una mascota encontrada
+pause 3500
+connect carlos 2222 voluntario zona_norte "Carlos Ruiz"
+register_entry A01 1094
+report_pet lost perro Luna negra mediana zona_norte 3001112233 "collar rojo, mancha blanca en el pecho"
+report_pet found perro desconocido negra mediana zona_norte 3004445566 "collar rojo"
+match_pets
