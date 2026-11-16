@@ -11,10 +11,67 @@ defmodule Comandos do
   @filtros_recursos %{"categoria" => :categoria, "zona" => :zona, "ubicacion" => :ubicacion}
   @filtros_mascotas %{"especie" => :especie, "zona" => :zona, "estado" => :estado, "tipo" => :tipo}
 
+  # Nombres en español de cada comando (se pueden usar los dos idiomas)
+  @en_espanol %{
+    "ayuda" => "help",
+    "conectar" => "connect",
+    "desconectar" => "disconnect",
+    "quien_soy" => "whoami",
+    "usuarios" => "users",
+    "actividad" => "activity",
+    "registrar_zona" => "register_zone",
+    "registrar_sector" => "register_sector",
+    "registrar_punto" => "register_point",
+    "listar_zonas" => "list_zones",
+    "estado_zona" => "zone_status",
+    "registrar_necesidad" => "register_need",
+    "listar_necesidades" => "list_needs",
+    "necesidades_pendientes" => "pending_needs",
+    "actualizar_necesidad" => "update_need",
+    "asignar_recurso" => "assign_resource",
+    "atender_pendientes" => "attend_pending",
+    "registrar_recurso" => "register_resource",
+    "entrada_recurso" => "resource_in",
+    "salida_recurso" => "resource_out",
+    "listar_recursos" => "list_resources",
+    "historial_recurso" => "resource_history",
+    "transferir_recurso" => "transfer_resource",
+    "recursos_criticos" => "critical_resources",
+    "reportar_persona" => "report_person",
+    "actualizar_persona" => "update_person",
+    "buscar_persona" => "find_person",
+    "historial_persona" => "person_history",
+    "enviar_mensaje" => "send_family_message",
+    "listar_mensajes" => "list_family_messages",
+    "entregar_mensaje" => "deliver_message",
+    "reportar_mascota" => "report_pet",
+    "listar_mascotas" => "list_pets",
+    "coincidencias_mascotas" => "match_pets",
+    "confirmar_coincidencia" => "confirm_match",
+    "registrar_albergue" => "register_shelter",
+    "listar_albergues" => "list_shelters",
+    "consultar_albergue" => "check_shelter",
+    "registrar_ingreso" => "register_entry",
+    "registrar_salida" => "register_exit",
+    "reporte_albergues" => "shelters_report",
+    "resumen" => "summary"
+  }
+
   def ejecutar(cliente, linea) do
     case Parser.tokenizar(linea) do
-      [] -> "Escriba un comando. Use help para ver la lista."
-      [comando | argumentos] -> despachar(cliente, comando, argumentos, linea)
+      [] -> "Escriba un comando. Use help (o ayuda) para ver la lista."
+      [comando | argumentos] -> despachar(cliente, traducir(comando), argumentos, linea)
+    end
+  end
+
+  # Si el comando está en español se cambia por su nombre en inglés; si no, queda igual
+  defp traducir(comando), do: Map.get(@en_espanol, comando, comando)
+
+  # "register_need" -> "registrar_necesidad"
+  defp en_espanol(comando) do
+    case Enum.find(@en_espanol, fn {_es, en} -> en == comando end) do
+      {es, _en} -> es
+      nil -> comando
     end
   end
 
@@ -44,7 +101,7 @@ defmodule Comandos do
   end
 
   defp ayuda_sin_sesion() do
-    "Comandos sin sesión: connect usuario contraseña tipo zona [\"nombre completo\"]\n" <>
+    "Comandos sin sesión: connect (conectar) usuario contraseña tipo zona [\"nombre completo\"]\n" <>
       "Tipos de usuario: #{Enum.join(Usuario.tipos(), ", ")}\n" <>
       "Conéctese y vuelva a escribir help para ver los comandos de su rol."
   end
@@ -58,8 +115,7 @@ defmodule Comandos do
         SesionesSupervisor.iniciar(cliente, u)
         ActividadServer.registrar(u.usuario, "connect (#{como})")
         accion = if como == :registrado, do: "Usuario registrado y conectado", else: "Bienvenido de nuevo"
-        "#{accion}: #{u.nombre} (#{u.tipo}, zona #{u.zona})"
-
+        "#{accion}: #{u.nombre} (#{u.tipo}, zona #{u.zona})" <> crear_zona_principal(u)
       {:error, mensaje} ->
         "Error: " <> mensaje
     end
@@ -71,7 +127,11 @@ defmodule Comandos do
   defp conectar(_cliente, _argumentos), do: uso("connect usuario contraseña tipo zona [\"nombre completo\"]")
 
   defp ejecutar_comando("help", _args, usuario, _cliente) do
-    "Comandos disponibles para #{usuario.tipo}:\n" <> Enum.join(Validaciones.comandos_permitidos(usuario.tipo), ", ")
+    usuario.tipo
+    |> Validaciones.comandos_permitidos()
+    |> Enum.map(fn comando -> "  #{comando} (#{en_espanol(comando)})" end)
+    |> Enum.join("\n")
+    |> (&("Comandos disponibles para #{usuario.tipo} (inglés / español):\n" <> &1)).()
   end
 
   defp ejecutar_comando("disconnect", _args, usuario, cliente) do
@@ -499,9 +559,25 @@ defmodule Comandos do
     end
   end
 
+  # Un coordinador o administrador que se conecta con una zona nueva la deja registrada,
+  # así puede trabajar en ella de inmediato (como en el ejemplo del enunciado)
+  defp crear_zona_principal(%Usuario{tipo: tipo, zona: zona}) when tipo in ["coordinador", "administrador"] do
+    if ZonasServer.existe?(zona) do
+      ""
+    else
+      case ZonasServer.registrar(zona, zona, "zona", "medio", "0", "") do
+        {:ok, _zona} -> "\nLa zona #{zona} no existía y se registró automáticamente (nivel medio)"
+        {:error, _mensaje} -> ""
+      end
+    end
+  end
+
+  defp crear_zona_principal(_usuario), do: ""
+
   defp zona_existe(zona) do
     if ZonasServer.existe?(zona), do: :ok, else: {:error, "La zona #{zona} no está registrada"}
   end
+
 
   # ["zona=centro", "prioridad=critica"] -> %{"zona" => "centro", "prioridad" => "critica"}
   defp filtros(args) do

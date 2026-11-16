@@ -15,8 +15,10 @@ defmodule Serializador do
   end
 
   # "\"R001\",\"agua\",\"50\"" -> ["R001", "agua", "50"]
-  def de_linea(linea) do
-    Regex.split(~r/,(?=(?:[^"]*"[^"]*")*[^"]*$)/, linea)
+    def de_linea(linea) do
+    regex = Regex.compile!(~S/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
+
+    Regex.split(regex, linea)
     |> Enum.map(fn campo -> campo |> String.trim() |> String.trim("\"") end)
   end
 
